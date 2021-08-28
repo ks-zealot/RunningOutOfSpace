@@ -5,12 +5,12 @@
 
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 ABlock::ABlock()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
-	 
 }
 
 void ABlock::BeginPlay()
@@ -25,7 +25,21 @@ void ABlock::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	if (bShouldMove)
 	{
-		SetActorLocation(UKismetMathLibrary::VLerp(GetActorLocation(), Destination, 0.1));
+		float speed;
+		if (bExposed)
+		{
+			speed = ExposeSpeed;
+		}
+		if (bMoving)
+		{
+			speed = MoveSpeed;
+		}
+		if (bFalling)
+		{
+			speed = FallSpeed;
+		}
+		FVector CurPos = UKismetMathLibrary::VLerp(GetActorLocation(), Destination, speed * DeltaSeconds);
+		SetActorLocation(CurPos);
 		if (UKismetMathLibrary::EqualEqual_VectorVector(GetActorLocation(), Destination, 0.1))
 		{
 			bShouldMove = false;
@@ -56,10 +70,12 @@ void ABlock::Tick(float DeltaSeconds)
 float ABlock::CalcDistance()
 {
 	FHitResult HitResult;
-	FVector Start =GetActorLocation();
-	FVector End =  FVector(GetActorLocation().X,  GetActorLocation().Y, 0);
+	FVector Start = TraceLocation;
+	FVector End =  FVector(TraceLocation.X, TraceLocation.Y, 0);
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.f, false, 4.f);
+
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel1, CollisionParams))
 	{
 		return HitResult.Distance;

@@ -41,4 +41,10 @@ private:
 	bool bMoving = false;
 	int32 fallingBlocks = 0;
 	int32 movingBlocks = 0;
+//corners
+	
+	FVector2D BottomLeft = FVector2D::ZeroVector;
+	FVector2D TopLeft = FVector2D(800.0, 0.0  );
+	FVector2D BottomRight =  FVector2D(0.0, 800.0 );
+	FVector2D TopRight = FVector2D(800.0, 800.0);
 };
