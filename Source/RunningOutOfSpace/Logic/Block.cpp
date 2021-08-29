@@ -47,7 +47,8 @@ void ABlock::Tick(float DeltaSeconds)
 			{
 				bExposed = false;
 				UE_LOG(LogTemp, Log, TEXT("Expose next."));
-				ExposeDelegate.Execute(this);
+				//ExposeCompleteDelegate.Execute();
+				 ExposeDelegate.Execute();
 			}
 			if (bFalling)
 			{
@@ -74,7 +75,7 @@ float ABlock::CalcDistance()
 	FVector End =  FVector(TraceLocation.X, TraceLocation.Y, 0);
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
-	//DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.f, false, 4.f);
+	 //DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.f, false, 4.f);
 
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel1, CollisionParams))
 	{

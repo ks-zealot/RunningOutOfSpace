@@ -31,10 +31,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 private:
 	TArray<ABlock*> Blocks;
+	bool notExposed();
 	void GenerateBlocks();
-	void Expose(ABlock*  Block);
 	bool CheckAllExposed(ABlock* Block, ABlock*& IntersectBlock);
 	int32 curExpose = 0;
+	bool bExpose = false;
 	bool bFall = false;
 	bool bFalling = false;
 	bool bMove = false;

@@ -18,13 +18,60 @@ void ATetraminoActor::BeginPlay()
 {
 	Super::BeginPlay();
 	GenerateBlocks();
-	Expose(Blocks[curExpose]);
+	//Expose(Blocks[curExpose]);
+	bExpose = true;
+}
+
+bool ATetraminoActor::notExposed()
+{
+	for (ABlock* CurBlock : Blocks)
+	{
+		for (ABlock* AnotherBlock : Blocks)
+		{
+			if (CurBlock != AnotherBlock && UKismetMathLibrary::EqualEqual_VectorVector(CurBlock->GetActorLocation(),
+				AnotherBlock->GetActorLocation(), 0.1))
+			{
+				UE_LOG(LogTemp, Log, TEXT("Not exposed! "));
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 // Called every frame
 void ATetraminoActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (bExpose)
+	{
+		bExpose = false;
+		ABlock* IntersectBlock;
+		for (ABlock* Block : Blocks)
+		{
+			if (!CheckAllExposed(Block, IntersectBlock))
+			{
+				IntersectBlock->Destination = IntersectBlock->GetActorLocation() +
+				(UKismetMathLibrary::RandomBool()
+					 ? FVector(0.0, 100.0, 0.0)
+					 : UKismetMathLibrary::RandomBool()
+					 ? FVector(0.0, -100.0, 0.0)
+					 : UKismetMathLibrary::RandomBool()
+					 ? FVector(100.0, 0.0, 0.0)
+					 : FVector(-100.0, 0.0, 0.0));
+				if (!IntersectBlock->ExposeDelegate.IsBound())
+				{
+					IntersectBlock->ExposeDelegate.BindLambda([&] { this->bExpose = true; });
+				}
+				IntersectBlock->bExposed = true;
+				IntersectBlock->bShouldMove = true;
+				return;
+			}
+		}
+		bMove = true;
+		this->movingBlocks = 4;
+		UE_LOG(LogTemp, Log, TEXT("Expose all"));
+	}
 	if (bFall)
 	{
 		float Dist = -1.0f;
@@ -32,14 +79,15 @@ void ATetraminoActor::Tick(float DeltaTime)
 		for (ABlock* Block : Blocks)
 		{
 			Block->TraceLocation = Block->GetActorLocation();
-			if (FMath::IsNearlyEqual(Dist, -1.0f, 0.1f))
+			float D = Block->CalcDistance();
+			if (!FMath::IsNearlyEqual(D, -1.0f, 0.1f))
 			{
-				Dist = Block->CalcDistance();
+				Dist = D;
 			}
 			else
 			{
 				float CurDist = Block->CalcDistance();
-				if (FMath::IsNearlyEqual(Dist, CurDist, 0.1f))
+				/*if (FMath::IsNearlyEqual(Dist, CurDist, 0.1f))
 				{
 					Dist = CurDist;
 					UE_LOG(LogTemp, Log, TEXT("could fall %f"), CurDist);
@@ -51,7 +99,7 @@ void ATetraminoActor::Tick(float DeltaTime)
 					this->movingBlocks = 4;
 					UE_LOG(LogTemp, Log, TEXT("could not fall %f"), CurDist);
 					break;
-				}
+				}*/
 			}
 		}
 		if (bFallRes)
@@ -79,13 +127,13 @@ void ATetraminoActor::Tick(float DeltaTime)
 	}
 	if (bMove)
 	{
-		FVector2D Corner = UKismetMathLibrary::RandomBool()
+		FVector2D Corner =  UKismetMathLibrary::RandomBool()
 			                   ? TopLeft
 			                   : UKismetMathLibrary::RandomBool()
 			                   ? TopRight
 			                   : UKismetMathLibrary::RandomBool()
 			                   ? BottomLeft
-			                   : BottomRight;
+			                   : BottomRight; 
 		/*FVector MovingVector = (UKismetMathLibrary::RandomBool()
 			                        ? UKismetMathLibrary::RandomBool()
 				                          ? FVector(0, 100, 0)
@@ -100,17 +148,28 @@ void ATetraminoActor::Tick(float DeltaTime)
 		//profiled
 		if (UKismetMathLibrary::EqualEqual_Vector2DVector2D(Corner, BottomLeft, 0.1))
 		{
-			UE_LOG(LogTemp, Log, TEXT("Place to BottomLeft")   );
+			UE_LOG(LogTemp, Log, TEXT("Place to BottomLeft"));
 			//calculate lowest location
 			FVector2D LowestLocation = TopRight;
-			for (ABlock* Block : Blocks)
+			TArray<FVector2D> Coords;
+			for (ABlock* Block1 : Blocks)
 			{
-				if (Block->GetActorLocation().X < LowestLocation.X
-					&& Block->GetActorLocation().Y < LowestLocation.Y)
+				for (ABlock* Block2 : Blocks)
 				{
-					LowestLocation = FVector2D(Block->GetActorLocation());
+					Coords.Add(FVector2D(Block1->GetActorLocation().X, Block2->GetActorLocation().Y));
 				}
 			}
+			float DistToCorner = 800.0;
+			for (FVector2D Loc : Coords)
+			{
+				float curDist = (BottomLeft - Loc).Size();
+				if (curDist < DistToCorner)
+				{
+					DistToCorner = curDist;
+					LowestLocation = Loc;
+				}
+			}
+
 			UE_LOG(LogTemp, Log, TEXT("LowestLocation %s "), *LowestLocation.ToString());
 
 			float DeepestPit = 0.0;
@@ -135,12 +194,12 @@ void ATetraminoActor::Tick(float DeltaTime)
 							if (FMath::IsNearlyEqual(Dist, CurDist, 0.1f))
 							{
 								Dist = CurDist;
-								UE_LOG(LogTemp, Log, TEXT("could fall %f"), CurDist);
+								//UE_LOG(LogTemp, Log, TEXT("could fall %f"), CurDist);
 							}
 							else
 							{
 								bFallRes = false;
-								UE_LOG(LogTemp, Log, TEXT("could not fall %f"), CurDist);
+								//UE_LOG(LogTemp, Log, TEXT("could not fall %f"), CurDist);
 								break;
 							}
 						}
@@ -163,21 +222,31 @@ void ATetraminoActor::Tick(float DeltaTime)
 		if (UKismetMathLibrary::EqualEqual_Vector2DVector2D(Corner, BottomRight, 0.1))
 		{
 			//calculate closest location
-			UE_LOG(LogTemp, Log, TEXT("Place to BottomRight")   );
+			UE_LOG(LogTemp, Log, TEXT("Place to BottomRight"));
 			FVector2D LowestLocation = TopLeft;
-			for (ABlock* Block : Blocks)
+			TArray<FVector2D> Coords;
+			for (ABlock* Block1 : Blocks)
 			{
-				if (Block->GetActorLocation().X < LowestLocation.X
-					&& Block->GetActorLocation().Y > LowestLocation.Y)
+				for (ABlock* Block2 : Blocks)
 				{
-					LowestLocation = FVector2D(Block->GetActorLocation());
+					Coords.Add(FVector2D(Block1->GetActorLocation().X, Block2->GetActorLocation().Y));
+				}
+			}
+			float DistToCorner = 800.0;
+			for (FVector2D Loc : Coords)
+			{
+				float curDist = (BottomRight - Loc).Size();
+				if (curDist < DistToCorner)
+				{
+					DistToCorner = curDist;
+					LowestLocation = Loc;
 				}
 			}
 			UE_LOG(LogTemp, Log, TEXT("LowestLocation %s "), *LowestLocation.ToString());
 			float DeepestPit = 0.0;
-			for (int k = 0; k < 8; k++)
+			for (int i = 0; i < 8; i++)
 			{
-				for (int i = 0; i < 8; i++)
+				for (int k = 0; k < 8; k++)
 				{
 					float Dist = -1.0f;
 					bool bFallRes = true;
@@ -195,12 +264,12 @@ void ATetraminoActor::Tick(float DeltaTime)
 							if (FMath::IsNearlyEqual(Dist, CurDist, 0.1f))
 							{
 								Dist = CurDist;
-								UE_LOG(LogTemp, Log, TEXT("could fall %f"), CurDist);
+								//	UE_LOG(LogTemp, Log, TEXT("could fall %f"), CurDist);
 							}
 							else
 							{
 								bFallRes = false;
-								UE_LOG(LogTemp, Log, TEXT("could not fall %f"), CurDist);
+								//	UE_LOG(LogTemp, Log, TEXT("could not fall %f"), CurDist);
 								break;
 							}
 						}
@@ -220,20 +289,31 @@ void ATetraminoActor::Tick(float DeltaTime)
 
 
 		// calculate place location from Top  Left
-			//profiled
-		if (UKismetMathLibrary::EqualEqual_Vector2DVector2D(Corner, TopLeft  , 0.1))
+		//profiled
+		if (UKismetMathLibrary::EqualEqual_Vector2DVector2D(Corner, TopLeft, 0.1))
 		{
 			//calculate closest location
-			UE_LOG(LogTemp, Log, TEXT("Place to TopLeft")   );
+			UE_LOG(LogTemp, Log, TEXT("Place to TopLeft"));
 			FVector2D LowestLocation = BottomRight;
-			for (ABlock* Block : Blocks)
+			TArray<FVector2D> Coords;
+			for (ABlock* Block1 : Blocks)
 			{
-				if (Block->GetActorLocation().X > LowestLocation.X
-					&& Block->GetActorLocation().Y < LowestLocation.Y)
+				for (ABlock* Block2 : Blocks)
 				{
-					LowestLocation = FVector2D(Block->GetActorLocation());
+					Coords.Add(FVector2D(Block1->GetActorLocation().X, Block2->GetActorLocation().Y));
 				}
 			}
+			float DistToCorner = 800.0;
+			for (FVector2D Loc : Coords)
+			{
+				float curDist = (TopLeft - Loc).Size();
+				if (curDist < DistToCorner)
+				{
+					DistToCorner = curDist;
+					LowestLocation = Loc;
+				}
+			}
+
 			UE_LOG(LogTemp, Log, TEXT("LowestLocation %s "), *LowestLocation.ToString());
 			float DeepestPit = 0.0;
 			for (int i = 8; i > 0; i--)
@@ -245,7 +325,7 @@ void ATetraminoActor::Tick(float DeltaTime)
 					for (ABlock* Block : Blocks)
 					{
 						Block->TraceLocation = Block->GetActorLocation()
-						+ FVector(-100.0 * i, 100.0 * k, 0)
+							+ FVector(-100.0 * i, 100.0 * k, 0)
 							+ FVector(LowestLocation.X, -LowestLocation.Y, 0);
 						if (FMath::IsNearlyEqual(Dist, -1.0f, 0.1f))
 						{
@@ -257,12 +337,10 @@ void ATetraminoActor::Tick(float DeltaTime)
 							if (FMath::IsNearlyEqual(Dist, CurDist, 0.1f))
 							{
 								Dist = CurDist;
-								UE_LOG(LogTemp, Log, TEXT("could fall %f"), CurDist);
 							}
 							else
 							{
 								bFallRes = false;
-								UE_LOG(LogTemp, Log, TEXT("could not fall %f"), CurDist);
 								break;
 							}
 						}
@@ -272,30 +350,40 @@ void ATetraminoActor::Tick(float DeltaTime)
 						if (Dist > DeepestPit)
 						{
 							DeepestPit = Dist;
-							DestLocation =  FVector(-100.0 * i, 100.0 * k, 0)
-							+ FVector(LowestLocation.X, -LowestLocation.Y, 0);
+							DestLocation = FVector(-100.0 * i, 100.0 * k, 0)
+								+ FVector(LowestLocation.X, -LowestLocation.Y, 0);
 						}
 					}
 				}
 			}
-		} 
+		}
 
 		// calculate place location from Top  Right
 		//profiled
 		if (UKismetMathLibrary::EqualEqual_Vector2DVector2D(Corner, TopRight, 0.1))
 		{
-			UE_LOG(LogTemp, Log, TEXT("Place to TopRight")   );
+			UE_LOG(LogTemp, Log, TEXT("Place to TopRight"));
 			//calculate closest location
 			FVector2D LowestLocation = BottomLeft;
-			for (ABlock* Block : Blocks)
+			TArray<FVector2D> Coords;
+			for (ABlock* Block1 : Blocks)
 			{
-				if (Block->GetActorLocation().X > LowestLocation.X
-					&& Block->GetActorLocation().Y > LowestLocation.Y)
+				for (ABlock* Block2 : Blocks)
 				{
-					LowestLocation = FVector2D(Block->GetActorLocation());
+					Coords.Add(FVector2D(Block1->GetActorLocation().X, Block2->GetActorLocation().Y));
 				}
 			}
-			
+			float DistToCorner = 800.0;
+			for (FVector2D Loc : Coords)
+			{
+				float curDist = (TopRight - Loc).Size();
+				if (curDist < DistToCorner)
+				{
+					DistToCorner = curDist;
+					LowestLocation = Loc;
+				}
+			}
+
 			UE_LOG(LogTemp, Log, TEXT("LowestLocation %s "), *LowestLocation.ToString());
 
 			float DeepestPit = 0.0;
@@ -393,7 +481,7 @@ void ATetraminoActor::GenerateBlocks()
 			                                  FVector::OneVector);
 		ABlock* Block = GetWorld()->SpawnActor<ABlock>(
 			BlockBlueprint.Get(), Transform);
-		Block->ExposeDelegate.BindUObject(this, &ATetraminoActor::Expose);
+		//Block->ExposeDelegate.BindUObject(this, &ATetraminoActor::Expose);
 		Block->idx = i;
 		Block->GetStaticMeshComponent()->SetMaterial(
 			0, Materials[UKismetMathLibrary::RandomIntegerInRange(0, Materials.Num() - 1)]);
@@ -401,53 +489,13 @@ void ATetraminoActor::GenerateBlocks()
 	}
 }
 
-void ATetraminoActor::Expose(ABlock* Block)
-{
-	//i have no idea how its works
-	UE_LOG(LogTemp, Log, TEXT("Expose  (). %d "), curExpose);
-	ABlock* IntersectBlock;
-	curExpose++;
-	if (CheckAllExposed(Block, IntersectBlock))
-	{
-		curExpose++;
-		if (curExpose < 4)
-		{
-			Expose(Blocks[curExpose]);
-		}
-		else
-		{
-			for (ABlock* B : Blocks)
-			{
-				if (!CheckAllExposed(B, IntersectBlock))
-				{
-					curExpose = 0;
-					Expose(Blocks[curExpose]);
-					break;
-				}
-			}
-		}
-		if (curExpose > 4)
-		{
-			UE_LOG(LogTemp, Log, TEXT("Stop Expose 1  (). %d "), curExpose);
-			bMove = true;
-			this->movingBlocks = 4;
-			// bFall = true;
-			// fallingBlocks = 4;
-		}
-		return;
-	}
-	IntersectBlock->Destination = IntersectBlock->GetActorLocation() +
-		(UKismetMathLibrary::RandomBool() ? FVector(0, 100, 0) : FVector(100, 0, 0));
-	IntersectBlock->bExposed = true;
-	IntersectBlock->bShouldMove = true;
-}
 
 bool ATetraminoActor::CheckAllExposed(ABlock* CurBlock, ABlock*& IntersectBlock)
 {
 	for (ABlock* AnotherBlock : Blocks)
 	{
 		if (CurBlock != AnotherBlock && UKismetMathLibrary::EqualEqual_VectorVector(CurBlock->GetActorLocation(),
-			AnotherBlock->GetActorLocation(), 0.1))
+			AnotherBlock->GetActorLocation(), 1))
 		{
 			IntersectBlock = AnotherBlock;
 			return false;

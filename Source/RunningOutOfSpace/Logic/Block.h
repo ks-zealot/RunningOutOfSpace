@@ -9,9 +9,10 @@
 /**
  * 
  */
-DECLARE_DELEGATE_OneParam(FExposeDelegate, ABlock*)
+DECLARE_DELEGATE(FExposeDelegate )
 DECLARE_DELEGATE(FBlockFallDelegate)
 DECLARE_DELEGATE(FBlockMoveDelegate)
+DECLARE_DELEGATE(FExposeCompleteDelegate)
 UCLASS()
 class RUNNINGOUTOFSPACE_API ABlock : public AStaticMeshActor
 {
@@ -25,6 +26,7 @@ public:
 	FVector Destination;
 	FVector TraceLocation;
 	FExposeDelegate ExposeDelegate;
+	FExposeCompleteDelegate ExposeCompleteDelegate;
 	FBlockFallDelegate BlockFallDelegate;
 	FBlockMoveDelegate BlockMoveDelegate;
 	bool bExposed = false;
