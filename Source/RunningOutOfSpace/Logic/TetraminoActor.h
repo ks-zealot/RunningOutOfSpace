@@ -7,7 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "TetraminoActor.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FFallDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFallDelegate, int32, level);
 UCLASS()
 class RUNNINGOUTOFSPACE_API ATetraminoActor : public AActor
 {
@@ -16,6 +16,8 @@ class RUNNINGOUTOFSPACE_API ATetraminoActor : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ATetraminoActor();
+	UPROPERTY(EditInstanceOnly,  BlueprintReadWrite, Meta= (ExposeOnSpawn=true))
+	int32 speedMod =1;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<class ABlock> BlockBlueprint;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)

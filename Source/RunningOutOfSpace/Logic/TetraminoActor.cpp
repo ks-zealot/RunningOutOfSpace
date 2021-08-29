@@ -108,6 +108,7 @@ void ATetraminoActor::Tick(float DeltaTime)
 			{
 				FVector Loc = Block->GetActorLocation();
 				Block->Destination = FVector(Loc.X, Loc.Y, Loc.Z - Dist + 50);
+				this->fallingBlocks = 4;
 				Block->bFalling = true;
 				Block->BlockFallDelegate.BindLambda([&] { this->fallingBlocks--; });
 				Block->bShouldMove = true;
@@ -122,7 +123,8 @@ void ATetraminoActor::Tick(float DeltaTime)
 		{
 			bFalling = false;
 			UE_LOG(LogTemp, Log, TEXT("Tetramino falls "));
-			FallDelegate.Broadcast();
+			UE_LOG(LogTemp, Log, TEXT("Coords %s "), *Blocks[0]->GetActorLocation().ToString());
+			FallDelegate.Broadcast(Blocks[0]->GetActorLocation().Z / 100);
 		}
 	}
 	if (bMove)
@@ -194,12 +196,10 @@ void ATetraminoActor::Tick(float DeltaTime)
 							if (FMath::IsNearlyEqual(Dist, CurDist, 0.1f))
 							{
 								Dist = CurDist;
-								//UE_LOG(LogTemp, Log, TEXT("could fall %f"), CurDist);
 							}
 							else
 							{
 								bFallRes = false;
-								//UE_LOG(LogTemp, Log, TEXT("could not fall %f"), CurDist);
 								break;
 							}
 						}
@@ -264,12 +264,10 @@ void ATetraminoActor::Tick(float DeltaTime)
 							if (FMath::IsNearlyEqual(Dist, CurDist, 0.1f))
 							{
 								Dist = CurDist;
-								//	UE_LOG(LogTemp, Log, TEXT("could fall %f"), CurDist);
 							}
 							else
 							{
 								bFallRes = false;
-								//	UE_LOG(LogTemp, Log, TEXT("could not fall %f"), CurDist);
 								break;
 							}
 						}
@@ -408,12 +406,10 @@ void ATetraminoActor::Tick(float DeltaTime)
 							if (FMath::IsNearlyEqual(Dist, CurDist, 0.1f))
 							{
 								Dist = CurDist;
-								UE_LOG(LogTemp, Log, TEXT("could fall %f"), CurDist);
 							}
 							else
 							{
 								bFallRes = false;
-								UE_LOG(LogTemp, Log, TEXT("could not fall %f"), CurDist);
 								break;
 							}
 						}
@@ -481,10 +477,11 @@ void ATetraminoActor::GenerateBlocks()
 			                                  FVector::OneVector);
 		ABlock* Block = GetWorld()->SpawnActor<ABlock>(
 			BlockBlueprint.Get(), Transform);
-		//Block->ExposeDelegate.BindUObject(this, &ATetraminoActor::Expose);
 		Block->idx = i;
 		Block->GetStaticMeshComponent()->SetMaterial(
 			0, Materials[UKismetMathLibrary::RandomIntegerInRange(0, Materials.Num() - 1)]);
+		Block->FallSpeed = Block->FallSpeed * speedMod;
+		UE_LOG(LogTemp, Log, TEXT("set fall speed %f"), Block->FallSpeed);
 		Blocks.Add(Block);
 	}
 }

@@ -34,8 +34,8 @@ public:
 	bool bMoving = false;
 	int32 idx = 0;
 	float CalcDistance();
-	float ExposeSpeed = 10.0;
-	float MoveSpeed = 10.0;
+	float ExposeSpeed = 20.0;
+	float MoveSpeed = 20.0;
 	float FallSpeed = 5.0;
 protected:
 	virtual void BeginPlay() override;
