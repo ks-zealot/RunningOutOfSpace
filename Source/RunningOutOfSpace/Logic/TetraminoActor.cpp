@@ -136,13 +136,6 @@ void ATetraminoActor::Tick(float DeltaTime)
 			                   : UKismetMathLibrary::RandomBool()
 			                   ? BottomLeft
 			                   : BottomRight; 
-		/*FVector MovingVector = (UKismetMathLibrary::RandomBool()
-			                        ? UKismetMathLibrary::RandomBool()
-				                          ? FVector(0, 100, 0)
-				                          : FVector(100, 0, 0)
-			                        : UKismetMathLibrary::RandomBool()
-			                        ? FVector(0, -100, 0)
-			                        : FVector(-100, 0, 0));*/
 
 		FVector DestLocation;
 
