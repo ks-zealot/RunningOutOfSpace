@@ -85,3 +85,8 @@ float ABlock::CalcDistance()
 		return -1;
 	}
 }
+
+void ABlock::HitActorReport()
+{
+	HitActorDelegate.Execute();
+}

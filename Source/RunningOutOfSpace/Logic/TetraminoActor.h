@@ -8,6 +8,7 @@
 #include "TetraminoActor.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FFallDelegate, int32, level);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHitActorTetraminoDelegate );
 UCLASS()
 class RUNNINGOUTOFSPACE_API ATetraminoActor : public AActor
 {
@@ -24,6 +25,10 @@ public:
 	TArray <class UMaterial *> Materials;
 	UPROPERTY(BlueprintAssignable)
 	FFallDelegate FallDelegate;
+	UPROPERTY(BlueprintAssignable)
+	FHitActorTetraminoDelegate HitActorTetraminoDelegate;
+	UFUNCTION(BlueprintCallable)
+	void ReportHitActor();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

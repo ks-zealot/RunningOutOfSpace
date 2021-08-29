@@ -9,7 +9,8 @@
 /**
  * 
  */
-DECLARE_DELEGATE(FExposeDelegate )
+DECLARE_DELEGATE(FExposeDelegate)
+DECLARE_DELEGATE(FHitActorDelegate)
 DECLARE_DELEGATE(FBlockFallDelegate)
 DECLARE_DELEGATE(FBlockMoveDelegate)
 DECLARE_DELEGATE(FExposeCompleteDelegate)
@@ -20,6 +21,8 @@ class RUNNINGOUTOFSPACE_API ABlock : public AStaticMeshActor
 
 public:
 	ABlock();
+	UFUNCTION(BlueprintCallable)
+	void HitActorReport();
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bShouldMove = false;
 	virtual void Tick(float DeltaSeconds) override;
@@ -29,6 +32,7 @@ public:
 	FExposeCompleteDelegate ExposeCompleteDelegate;
 	FBlockFallDelegate BlockFallDelegate;
 	FBlockMoveDelegate BlockMoveDelegate;
+	FHitActorDelegate  HitActorDelegate;
 	bool bExposed = false;
 	bool bFalling = false;
 	bool bMoving = false;

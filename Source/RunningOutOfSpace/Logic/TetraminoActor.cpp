@@ -466,6 +466,7 @@ void ATetraminoActor::GenerateBlocks()
 		Block->GetStaticMeshComponent()->SetMaterial(
 			0, Materials[UKismetMathLibrary::RandomIntegerInRange(0, Materials.Num() - 1)]);
 		Block->FallSpeed = Block->FallSpeed * speedMod;
+		Block->HitActorDelegate.BindUObject(this, &ATetraminoActor::ReportHitActor);
 		Blocks.Add(Block);
 	}
 }
@@ -484,4 +485,9 @@ bool ATetraminoActor::CheckAllExposed(ABlock* CurBlock, ABlock*& IntersectBlock)
 	}
 
 	return true;
+}
+
+void ATetraminoActor::ReportHitActor()
+{
+	HitActorTetraminoDelegate.Broadcast();
 }
