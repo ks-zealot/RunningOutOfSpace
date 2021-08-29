@@ -440,22 +440,7 @@ void ATetraminoActor::Tick(float DeltaTime)
 			}
 			Block->bShouldMove = true;
 		}
-		/*for (ABlock* Block : Blocks)
-		{
-			if (Block->bMoving)
-			{
-				UE_LOG(LogTemp, Log, TEXT("Block a;ready move ") );
-				continue;
-			}
-			FVector Loc = Block->GetActorLocation();
-			UE_LOG(LogTemp, Log, TEXT("Tetramino move to %s "), *Loc.ToString());
-			Block->Destination = Loc + MovingVector;
-			Block->bMoving = true;
-			Block->BlockMoveDelegate.BindLambda([&] { this->movingBlocks--; });
-			Block->bShouldMove = true;
-		}*/
-		//bMove = false;
-		//bMoving = true;
+		
 	}
 	if (bMoving)
 	{
@@ -481,7 +466,6 @@ void ATetraminoActor::GenerateBlocks()
 		Block->GetStaticMeshComponent()->SetMaterial(
 			0, Materials[UKismetMathLibrary::RandomIntegerInRange(0, Materials.Num() - 1)]);
 		Block->FallSpeed = Block->FallSpeed * speedMod;
-		UE_LOG(LogTemp, Log, TEXT("set fall speed %f"), Block->FallSpeed);
 		Blocks.Add(Block);
 	}
 }
