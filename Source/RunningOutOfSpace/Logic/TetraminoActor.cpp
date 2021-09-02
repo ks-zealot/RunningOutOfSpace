@@ -458,7 +458,17 @@ void ATetraminoActor::GenerateBlocks()
 		Block->idx = i;
 		Block->GetStaticMeshComponent()->SetMaterial(
 			0, Materials[UKismetMathLibrary::RandomIntegerInRange(0, Materials.Num() - 1)]);
-		Block->FallSpeed = Block->FallSpeed * speedMod;
+		if ( Block->FallSpeed * speedMod < 25)
+		{
+			Block->FallSpeed = Block->FallSpeed * speedMod;
+			Block->MoveSpeed = Block->MoveSpeed * speedMod;
+		} else
+		{
+			Block->FallSpeed++;
+			Block->MoveSpeed++;
+		}
+		
+		
 		Block->HitActorDelegate.BindUObject(this, &ATetraminoActor::ReportHitActor);
 		Blocks.Add(Block);
 	}
