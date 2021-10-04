@@ -464,8 +464,8 @@ void ATetraminoActor::GenerateBlocks()
 			Block->MoveSpeed = Block->MoveSpeed * speedMod;
 		} else
 		{
-			Block->FallSpeed++;
-			Block->MoveSpeed++;
+			Block->FallSpeed = Block->FallSpeed++ + 25;
+			Block->MoveSpeed = Block->MoveSpeed++ + 25;
 		}
 		
 		
